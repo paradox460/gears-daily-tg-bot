@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/paradox460/gears-daily-tg-bot/master/config-schema.json",
+  "title": "Gears Daily Telegram Bot Configuration",
+  "description": "Configuration for the Gears Daily Telegram Bot",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string",
+      "description": "Telegram authentication token"
+    },
+    "chats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chat_id": {
+            "type": "string",
+            "description": "The chat, channel, or user to send the message to."
+          },
+          "thread_id": {
+            "type": "string",
+            "description": "The thread inside the group chat to send the message to."
+          },
+          "silent": {
+            "type": "boolean",
+            "description": "Should the message be sent silently, without pinging the the recipient(s)?"
+          },
+          "forward": {
+            "type": "boolean",
+            "description": "Should the message be forwarded, meaning with attribution of the original, or copied, without attribution?"
+          }
+        },
+        "required": ["chat_id"]
+      }
+    }
+  },
+  "required": ["chats"]
+}

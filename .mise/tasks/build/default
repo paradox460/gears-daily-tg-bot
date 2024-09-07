@@ -1,3 +1,3 @@
 #!/usr/bin/env fish
 # mise description="Build bot targeting linux"
-deno compile --allow-env=BOT_TOKEN,CHAT_ID,THREAD_ID --allow-net=www.reddit.com,api.telegram.org,i.redd.it --allow-read=gears_bot_last_run --allow-write=gears_bot_last_run $argv --output gears_bot bot.ts
+deno compile --allow-env=BOT_TOKEN,CONFIG_PATH --allow-net=www.reddit.com,api.telegram.org,i.redd.it --allow-read=gears_bot_last_run,config.json --allow-write=gears_bot_last_run $argv --output gears_bot bot.ts

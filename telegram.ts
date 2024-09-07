@@ -1,23 +1,47 @@
-const token = Deno.env.get("BOT_TOKEN") as string;
-const chat = Deno.env.get("CHAT_ID") as string;
-const thread = Deno.env.get("THREAD_ID");
+const configPath = Deno.env.get("CONFIG_PATH") ?? "./config.json";
 
 import { ImageWithDate } from "./gears.ts";
 
+interface Chat {
+  chat_id: string;
+  thread_id?: string;
+  silent?: boolean;
+  forward?: boolean;
+}
+
+export interface Config {
+  chats: Chat[];
+  token?: string;
+}
+
+function getConfig(): Config {
+  const rawConfig = Deno.readTextFileSync(configPath);
+  const config = JSON.parse(rawConfig) as Config;
+  const token = Deno.env.get("BOT_TOKEN");
+  if (token) {
+    config.token = token;
+  }
+  return config;
+}
+
 export async function sendPhoto({ image, date }: ImageWithDate) {
-  const [firstChat, ...otherChats] = chat.split(",");
+  const config = getConfig();
+  const [firstChat, ...otherChats] = config.chats;
   console.log("sending image");
   const formData = new FormData();
   formData.append("photo", image, `daily_${date.toISOString()}.jpg`);
   formData.append("caption", `${date.format("dddd, MMMM D")}`);
-  formData.append("chat_id", firstChat);
-  if (thread) {
-    formData.append("message_thread_id", thread);
+  formData.append("chat_id", firstChat.chat_id);
+  if (firstChat.thread_id) {
+    formData.append("message_thread_id", firstChat.thread_id);
   }
   formData.append("show_caption_above_media", "True");
+  if (firstChat.silent) {
+    formData.append("disable_notification", "True");
+  }
 
   const request = new Request(
-    `https://api.telegram.org/bot${token}/sendPhoto`,
+    `https://api.telegram.org/bot${config.token}/sendPhoto`,
     {
       method: "POST",
       body: formData,
@@ -37,19 +61,21 @@ export async function sendPhoto({ image, date }: ImageWithDate) {
 
   console.log("Forwarding to additional channels, if any");
 
-  for (const chat_id of otherChats) {
+  for (const chat of otherChats) {
+    const func = chat.forward ? "forwardMessage" : "copyMessage";
     const request = new Request(
-      `https://api.telegram.org/bot${token}/copyMessage`,
+      `https://api.telegram.org/bot${config.token}/${func}`,
       {
-        // const request = new Request(`https://httpbin.org/post`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json; charset=utf-8",
         },
         body: JSON.stringify({
-          chat_id,
+          chat_id: chat.chat_id,
           from_chat_id,
           message_id,
+          ...(chat.thread_id? { message_thread_id: chat.thread_id} : {}),
+          disableNotification: !!chat.silent,
         }),
       },
     );

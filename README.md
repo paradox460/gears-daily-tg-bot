@@ -6,15 +6,31 @@ Written in Deno because I didn't want to think about it too hard, just wanted so
 
 ## Configuration
 
-Configuration is done _entirely_ through envars. You will need to bring a telegram bot token, a channel id, and a topic id. Then, using whatever system you want to set envars, set the following:
+Write a config file at `./config.json`, relative to the bots path. The file should look something like this:
 
-| Envar       | Description                                             |
-| ----------- | ------------------------------------------------------- |
-| `BOT_TOKEN` | Telegram BotFather bot token                            |
-| `CHAT_ID`   | The ID of the chat you want the bot to send messages to |
-| `THREAD_ID` | The thread/topic you want the messages to appear in     |
+```json
+{
+  "token": "your_telegram_token_here (optionally, you can use envar too)",
+  "chats": [
+    {
+      "chat_id": "12345",
+      "thread_id": "67890"
+    },
+    {
+      "chat_id": "3456",
+      "thread_id": "9876",
+      "silent": true,
+      "forward": true
+    }
+  ]
+}
+```
 
-Upon running, the bot will boot up, scan for _new_ posts, update a file indicating its last scan time, send any new images to Telegram, and exit.
+[A json-schema is provided for your reference](https://raw.githubusercontent.com/paradox460/gears-daily-tg-bot/master/config-schema.json)
+
+You can change the path the bot will look for the config file by setting the `CONFIG_PATH` envar.
+
+You _must_ also provide a telegram bot token. You can do so in the config file, under the `token` key, or you can set the `BOT_TOKEN` envar.
 
 ## SystemD timers example
 
