@@ -1,6 +1,6 @@
-defmodule GearsDailyTg do
+defmodule GearsDaily do
   @moduledoc """
-  Documentation for `GearsDailyTg`.
+  Documentation for `GearsDaily`.
   """
 
   @doc """
@@ -8,7 +8,7 @@ defmodule GearsDailyTg do
 
   ## Examples
 
-      iex> GearsDailyTg.hello()
+      iex> GearsDaily.hello()
       :world
 
   """
