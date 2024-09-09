@@ -1,6 +1,7 @@
-const configPath = Deno.env.get("CONFIG_PATH") ?? "./config.json";
+import dayjs from "./dayjs_setup.ts";
+import type { Daily } from "./gears.ts";
 
-import { ImageWithDate } from "./gears.ts";
+const configPath = Deno.env.get("CONFIG_PATH") ?? "./config.json";
 
 interface Chat {
   chat_id: string;
@@ -9,9 +10,14 @@ interface Chat {
   forward?: boolean;
 }
 
-export interface Config {
+interface Config {
   chats: Chat[];
   token?: string;
+}
+
+interface SuccessfulSend {
+  message_id: number;
+  from_chat_id: number;
 }
 
 function getConfig(): Config {
@@ -23,64 +29,88 @@ function getConfig(): Config {
   }
   return config;
 }
+const config = getConfig();
 
-export async function sendPhoto({ image, date }: ImageWithDate) {
-  const config = getConfig();
-  const [firstChat, ...otherChats] = config.chats;
-  console.log("sending image");
-  const formData = new FormData();
-  formData.append("photo", image, `daily_${date.toISOString()}.jpg`);
-  formData.append("caption", `${date.format("dddd, MMMM D")}`);
-  formData.append("chat_id", firstChat.chat_id);
-  if (firstChat.thread_id) {
-    formData.append("message_thread_id", firstChat.thread_id);
-  }
-  formData.append("show_caption_above_media", "True");
-  if (firstChat.silent) {
-    formData.append("disable_notification", "True");
-  }
+function buildMessage(daily: Daily, day: dayjs.Dayjs) {
+  return `
+*${day.format("dddd, MMMM D")}*
 
-  const request = new Request(
-    `https://api.telegram.org/bot${config.token}/sendPhoto`,
+*Horde Daily: ${daily.map}*
+${daily.horde_reward}
+_Map/Reward next appearance: ${daily.next_map.format("MMMM D")} / ${
+    daily.next_horde_reward.format("MMMM D")
+  }_
+
+*Mutators*: ${daily.mutators}
+_*Mutators next appearance:* ${daily.next_mutator.format("MMMM D")}_
+
+*Escape Daily: ${daily.escape}*
+${daily.escape_reward}
+_Escape/Reward next appearance: ${daily.next_escape.format("MMMM D")} / ${
+    daily.next_escape_reward.format("MMMM D")
+  }_
+`.trim().replace(/\./, "\\.");
+}
+
+async function sendMessage(
+  message: string,
+  chat: Chat,
+): Promise<SuccessfulSend> {
+  const response = await fetch(
+    `https://api.telegram.org/bot${config.token}/sendMessage`,
     {
       method: "POST",
-      body: formData,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify({
+        chat_id: chat.chat_id,
+        ...(chat.thread_id ? { message_thread_id: chat.thread_id } : {}),
+        text: message,
+        ...(chat.silent ? { disable_notification: true } : {}),
+        parse_mode: "MarkdownV2",
+      }),
     },
   );
 
-  console.log(request);
+  const json = await response.json();
 
-  const response = await fetch(request);
+  const { message_id, chat: { id: from_chat_id } } = json.result;
+
+  return { message_id, from_chat_id };
+}
+
+async function copyOrForwardMessage(
+  { message_id, from_chat_id }: SuccessfulSend,
+  chat: Chat,
+) {
+  const func = chat.forward ? "forwardMessage" : "copyMessage";
+  const response = await fetch(
+    `https://api.telegram.org/bot${config.token}/${func}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify({
+        chat_id: chat.chat_id,
+        from_chat_id,
+        message_id,
+        ...(chat.thread_id ? { message_thread_id: chat.thread_id } : {}),
+        disableNotification: !!chat.silent,
+      }),
+    },
+  );
 
   console.log(response);
+}
 
-  const {
-    message_id,
-    chat: { id: from_chat_id },
-  } = await response.json().then((json) => json.result);
-
-  console.log("Forwarding to additional channels, if any");
-
+export async function sendDaily(daily: Daily, day: dayjs.Dayjs) {
+  const [firstChat, ...otherChats] = config.chats;
+  const message = buildMessage(daily, day);
+  console.log("Message:\n", message)
+  const firstSuccess = await sendMessage(message, firstChat);
   for (const chat of otherChats) {
-    const func = chat.forward ? "forwardMessage" : "copyMessage";
-    const request = new Request(
-      `https://api.telegram.org/bot${config.token}/${func}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-        },
-        body: JSON.stringify({
-          chat_id: chat.chat_id,
-          from_chat_id,
-          message_id,
-          ...(chat.thread_id? { message_thread_id: chat.thread_id} : {}),
-          disableNotification: !!chat.silent,
-        }),
-      },
-    );
-
-    const response = await fetch(request);
-    console.log(response);
+    copyOrForwardMessage(firstSuccess, chat);
   }
 }

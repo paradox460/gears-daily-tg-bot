@@ -2,3 +2,5 @@
 gears_bot_last_run
 gears_bot
 config.json
+database.db-shm
+database.db-wal
