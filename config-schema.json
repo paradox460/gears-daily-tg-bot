@@ -9,6 +9,10 @@
       "type": "string",
       "description": "Telegram authentication token"
     },
+    "offset": {
+      "type": "number",
+      "description": "Offset (days) to report"
+    },
     "chats": {
       "type": "array",
       "items": {

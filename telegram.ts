@@ -1,34 +1,12 @@
 import dayjs from "./dayjs_setup.ts";
 import type { Daily } from "./gears.ts";
-
-const configPath = Deno.env.get("CONFIG_PATH") ?? "./config.json";
-
-interface Chat {
-  chat_id: string;
-  thread_id?: string;
-  silent?: boolean;
-  forward?: boolean;
-}
-
-interface Config {
-  chats: Chat[];
-  token?: string;
-}
+import getConfig, {Chat}  from "./config.ts";
 
 interface SuccessfulSend {
   message_id: number;
   from_chat_id: number;
 }
 
-function getConfig(): Config {
-  const rawConfig = Deno.readTextFileSync(configPath);
-  const config = JSON.parse(rawConfig) as Config;
-  const token = Deno.env.get("BOT_TOKEN");
-  if (token) {
-    config.token = token;
-  }
-  return config;
-}
 const config = getConfig();
 
 function buildMessage(daily: Daily, day: dayjs.Dayjs) {
@@ -108,7 +86,7 @@ async function copyOrForwardMessage(
 export async function sendDaily(daily: Daily, day: dayjs.Dayjs) {
   const [firstChat, ...otherChats] = config.chats;
   const message = buildMessage(daily, day);
-  console.log("Message:\n", message)
+  console.log("Message:\n", message);
   const firstSuccess = await sendMessage(message, firstChat);
   for (const chat of otherChats) {
     copyOrForwardMessage(firstSuccess, chat);
