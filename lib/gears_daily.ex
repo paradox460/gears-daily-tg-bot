@@ -1,18 +1,13 @@
 defmodule GearsDaily do
-  @moduledoc """
-  Documentation for `GearsDaily`.
-  """
+  import Ecto.Query
+  alias GearsDaily.Repo
+  alias GearsDaily.Daily
 
-  @doc """
-  Hello world.
+  @epoch ~D[2024-03-13]
+  def today_daily do
+    day = Date.utc_today() |> Date.diff(@epoch)
 
-  ## Examples
+    from(d in Daily, where: d.day == ^day, preload: ^~w[map horde_reward escape_reward mutator escape]a) |> Repo.one!()
 
-      iex> GearsDaily.hello()
-      :world
-
-  """
-  def hello do
-    :world
   end
 end

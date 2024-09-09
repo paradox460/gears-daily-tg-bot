@@ -23,7 +23,8 @@ defmodule GearsDaily.MixProject do
   defp deps do
     [
       {:ecto_sql, "~> 3.12.0"},
-      {:ecto_sqlite3, "~> 0.16"}
+      {:ecto_sqlite3, "~> 0.16"},
+      {:nimble_csv, "~> 1.2", only: :dev}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
