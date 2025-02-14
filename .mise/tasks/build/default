@@ -1,3 +1,6 @@
 #!/usr/bin/env fish
-# mise description="Build bot targeting linux"
+#MISE description="Build bot"
+#MISE sources=["**/*.ts"]
+#MISE outputs=["gears_bot"]
+#MISE tools=["deno"]
 deno compile --allow-all --unstable-ffi $argv --output gears_bot bot.ts

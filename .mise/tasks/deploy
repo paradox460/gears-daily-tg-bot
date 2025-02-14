@@ -1,0 +1,5 @@
+#!/usr/bin/env fish
+#MISE description="Deploys bot to my server"
+#MISE depends=["build:linux"]
+#MISE depends_post=["build:clean"]
+scp gears_bot mrf:~/gears-bot

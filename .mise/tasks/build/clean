@@ -1,3 +1,4 @@
 #!/usr/bin/env fish
 # mise description="Clean up all build artifacts"
 rm gears_bot gears_bot_last_run
+exit 0
