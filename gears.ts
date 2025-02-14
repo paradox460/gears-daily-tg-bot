@@ -5,7 +5,6 @@ const db = new Database("database.db", {
   readonly: true,
   create: false,
 });
-db.exec("pragma journal_mode = WAL");
 
 const epoch = dayjs.utc("2024-03-13T19:00:00Z");
 export interface Daily extends Record<string, number | string | dayjs.Dayjs> {
@@ -37,19 +36,32 @@ function getNext(
     day: number;
   },
 ): dayjs.Dayjs {
-  const nextDay = db.prepare(`
- SELECT
-  day
-FROM
-  dailies
-  JOIN ${table} ON dailies.${key}_id = ${table}.id
-WHERE
-  dailies.day > :day
-  AND dailies.${key}_id = :id
-LIMIT 1
+  let nextDay = db.prepare(`
+    SELECT
+      day
+    FROM
+      dailies
+      JOIN ${table} ON dailies.${key}_id = ${table}.id
+    WHERE
+      dailies.day > :day
+      AND dailies.${key}_id = :id
+    LIMIT 1
     `).value({ day, id })?.[0];
   if (!nextDay) {
-    throw new Error("No next day found");
+    // In the event that we don't find a next day, we're at or near the end of
+    // the cycle, and should restart it.
+    // Yes, you could do this in pure SQL with a big CASE or an IIF statement,
+    // but thats messy and ugly and difficult to read
+    nextDay = db.prepare(`
+      SELECT
+        day
+      FROM
+        dailies
+        JOIN ${table} ON dailies.${key}_id = ${table}.id
+      WHERE
+        dailies.${key}_id = :id
+      LIMIT 1
+    `).value({ id })?.[0];
   }
   return epoch.add(nextDay as number, "days");
 }

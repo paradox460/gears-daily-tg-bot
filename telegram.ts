@@ -1,6 +1,6 @@
 import dayjs from "./dayjs_setup.ts";
 import type { Daily } from "./gears.ts";
-import getConfig, {Chat}  from "./config.ts";
+import getConfig, { Chat } from "./config.ts";
 
 interface SuccessfulSend {
   message_id: number;
