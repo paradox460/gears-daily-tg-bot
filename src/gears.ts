@@ -1,11 +1,8 @@
 import dayjs from "./dayjs_setup.ts";
-import { Database } from "jsr:@db/sqlite@0.11";
+import { DatabaseSync } from "node:sqlite";
 
 const databasePath = import.meta.dirname + "/../data/database.db";
-const db = new Database(databasePath, {
-  readonly: true,
-  create: false,
-});
+const db = new DatabaseSync(databasePath, { readOnly: true });
 
 const epoch = dayjs.utc("2024-03-13T19:00:00Z");
 export interface Daily extends Record<string, number | string | dayjs.Dayjs> {
@@ -45,10 +42,10 @@ function getNext(
       dailies
       JOIN ${table} ON dailies.${key}_id = ${table}.id
     WHERE
-      dailies.day > :day
-      AND dailies.${key}_id = :id
+      dailies.day > ?
+      AND dailies.${key}_id = ?
     LIMIT 1
-    `).value({ day, id })?.[0] as number | undefined;
+    `).get(day, id)?.day as number | undefined;
   if (!nextDay) {
     // In the event that we don't find a next day, we're at or near the end of
     // the cycle, and should restart it.
@@ -61,34 +58,38 @@ function getNext(
         dailies
         JOIN ${table} ON dailies.${key}_id = ${table}.id
       WHERE
-        dailies.${key}_id = :id
+        dailies.${key}_id = ?
       LIMIT 1
-    `).value({ id })?.[0] as number | undefined;
+    `).get(id)?.day as number | undefined;
+  }
+  if (nextDay === undefined) {
+    throw new Error(
+      `No day found for table=${table}, key=${key}, id=${id}`,
+    );
   }
   const cycles = Math.floor(totalDays / 401);
-  const cycleOffset = (nextDay! <= day) ? (cycles + 1) : cycles;
-  return epoch.add(nextDay! + cycleOffset * 401, "days");
+  const cycleOffset = (nextDay <= day) ? (cycles + 1) : cycles;
+  return epoch.add(nextDay + cycleOffset * 401, "days");
 }
 function query(day: number, totalDays: number): Daily {
-  const results: InternalDaily | undefined = db.prepare(`
-SELECT
-  dailies.*,
-  maps.name AS map,
-  mutators.mutators,
-  horde_rewards.reward AS 'horde_reward',
-  escapes.name AS 'escape',
-  escape_rewards.reward AS 'escape_reward'
-FROM
-  'dailies'
-  JOIN maps ON dailies.map_id = maps.id
-  JOIN mutators ON dailies.mutator_id = mutators.id
-  JOIN rewards AS horde_rewards ON dailies.horde_reward_id = horde_rewards.id
-  JOIN rewards AS escape_rewards ON dailies.escape_reward_id = escape_rewards.id
-  JOIN escapes ON dailies.escape_id = escapes.id
-WHERE
-  dailies.day = ?
-`).get<InternalDaily>(day);
-
+  const results = db.prepare(`
+    SELECT
+      dailies.*,
+      maps.name AS map,
+      mutators.mutators,
+      horde_rewards.reward AS 'horde_reward',
+      escapes.name AS 'escape',
+      escape_rewards.reward AS 'escape_reward'
+    FROM
+      'dailies'
+      JOIN maps ON dailies.map_id = maps.id
+      JOIN mutators ON dailies.mutator_id = mutators.id
+      JOIN rewards AS horde_rewards ON dailies.horde_reward_id = horde_rewards.id
+      JOIN rewards AS escape_rewards ON dailies.escape_reward_id = escape_rewards.id
+      JOIN escapes ON dailies.escape_id = escapes.id
+    WHERE
+      dailies.day = ?
+  `).get(day) as InternalDaily | undefined;
   if (!results) {
     throw new Error("No daily found for the provided date");
   }
@@ -132,7 +133,7 @@ WHERE
 }
 
 export function dailyForDate(date: dayjs.Dayjs) {
-  const totalDays = -(epoch.diff(date, "days")) + 0;
+  const totalDays = -(epoch.diff(date, "days"));
   const dayDiff = (totalDays % 401) || 0;
 
   return query(dayDiff, totalDays);
