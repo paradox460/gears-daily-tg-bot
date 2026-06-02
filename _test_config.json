@@ -1,0 +1,15 @@
+{
+  "$schema": "./config-schema.json",
+  "token": "test:fake-token-for-testing",
+  "chats": [
+    {
+      "chat_id": "-100testchatid"
+    },
+    {
+      "chat_id": "-100testchat2",
+      "thread_id": "42",
+      "silent": true,
+      "forward": true
+    }
+  ]
+}
