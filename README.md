@@ -81,9 +81,10 @@ you keep the bot envars close to the bot itself.
 
 ## Building
 
-Pretty simple Deno builds, since the sqlite uses unsafe-ffi, I allow-all. I
-wrote a few [mise](https://mise.jdx.dev/tasks/) tasks to make it easier to run
-the compiler. Read the mise docs on how to enable them, and then you can run
+Pretty simple Deno builds, with minimal permissions. Temporal and node:sqlite
+are used, to reduce dependencies. I wrote a few
+[mise](https://mise.jdx.dev/tasks/) tasks to make it easier to run the compiler.
+Read the mise docs on how to enable them, and then you can run
 
 ```sh
 mise run build:default
@@ -92,11 +93,11 @@ mise run build:default
 You can also just run it as a script, which is lighter-weight:
 
 ```sh
-deno run bot.ts
+deno run src/bot.ts
 ```
 
 ## SQL Database
 
-The SQLite3 database, located under `database.db`, was created using some custom
+The SQLite3 database, located under `data/database.db`, was created using some custom
 code on the `elixir` branch of this repo, and would not have been possible
 without Dr.Shwazz providing me with the excel sheet of the daily rotations.
