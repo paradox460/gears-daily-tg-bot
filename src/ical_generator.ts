@@ -5,13 +5,10 @@ import ical, {
   ICalRepeatingOptions,
 } from "npm:ical-generator";
 
-import { Database } from "jsr:@db/sqlite@0.11";
+import { DatabaseSync } from "node:sqlite";
 
 const databasePath = import.meta.dirname + "/../data/database.db";
-const db = new Database(databasePath, {
-  readonly: true,
-  create: false,
-});
+const db = new DatabaseSync(databasePath, { readOnly: true });
 
 export const epoch = Temporal.ZonedDateTime.from("2024-03-13T19:00:00[UTC]");
 const allDailies = db.prepare(`
@@ -42,7 +39,7 @@ function calcDate(offset: number) {
 }
 
 for (const daily of allDailies) {
-  const date = calcDate(daily.day);
+  const date = calcDate(daily.day as number);
 
   const description: ICalDescription = {
     plain: `
