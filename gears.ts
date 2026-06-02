@@ -29,11 +29,12 @@ interface InternalDaily extends Daily {
 }
 
 function getNext(
-  { table, key, id, day }: {
+  { table, key, id, day, totalDays }: {
     table: string;
     key: string;
     id: number;
     day: number;
+    totalDays: number;
   },
 ): dayjs.Dayjs {
   let nextDay = db.prepare(`
@@ -63,9 +64,11 @@ function getNext(
       LIMIT 1
     `).value({ id })?.[0];
   }
-  return epoch.add(nextDay as number, "days");
+  const cycles = Math.floor(totalDays / 401);
+  const cycleOffset = (nextDay! <= day) ? (cycles + 1) : cycles;
+  return epoch.add(nextDay! + cycleOffset * 401, "days");
 }
-function query(day: number): Daily {
+function query(day: number, totalDays: number): Daily {
   const results: InternalDaily | undefined = db.prepare(`
 SELECT
   dailies.*,
@@ -100,31 +103,36 @@ WHERE
       key: "escape_reward",
       id: results.escape_reward_id,
       day,
+      totalDays,
     }),
     next_escape: getNext({
       table: "escapes",
       key: "escape",
       id: results.escape_id,
       day,
+      totalDays,
     }),
     next_horde_reward: getNext({
       table: "rewards",
       key: "horde_reward",
       id: results.horde_reward_id,
       day,
+      totalDays,
     }),
-    next_map: getNext({ table: "maps", key: "map", id: results.map_id, day }),
+    next_map: getNext({ table: "maps", key: "map", id: results.map_id, day, totalDays }),
     next_mutator: getNext({
       table: "mutators",
       key: "mutator",
       id: results.mutator_id,
       day,
+      totalDays,
     }),
   };
 }
 
 export function dailyForDate(date: dayjs.Dayjs) {
-  const dayDiff = epoch.diff(date, "days") * -1 % 401;
+  const totalDays = -(epoch.diff(date, "days")) + 0;
+  const dayDiff = (totalDays % 401) || 0;
 
-  return query(dayDiff);
+  return query(dayDiff, totalDays);
 }
