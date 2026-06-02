@@ -1,9 +1,9 @@
 import { assertEquals, assert } from "jsr:@std/assert@1";
-import dayjs from "./dayjs_setup.ts";
-import type { Daily } from "./gears.ts";
+import dayjs from "../src/dayjs_setup.ts";
+import type { Daily } from "../src/gears.ts";
 
 // Point config at test fixture before the module is loaded
-Deno.env.set("CONFIG_PATH", "./_test_config.json");
+Deno.env.set("CONFIG_PATH", "./tests/_test_config.json");
 
 function makeMockDaily(): Daily {
   const base = dayjs.utc("2024-03-13T19:00:00Z");
@@ -42,7 +42,7 @@ Deno.test("sendDaily sends message to the first chat", async () => {
     );
   };
 
-  const { sendDaily } = await import("./telegram.ts");
+  const { sendDaily } = await import("../src/telegram.ts");
 
   const daily = makeMockDaily();
   const day = dayjs.utc("2024-03-13T19:00:00Z");
@@ -84,7 +84,7 @@ Deno.test("sendDaily sends message with correct parse_mode and formatting", asyn
     );
   };
 
-  const { sendDaily } = await import("./telegram.ts");
+  const { sendDaily } = await import("../src/telegram.ts");
 
   const daily = makeMockDaily();
   const day = dayjs.utc("2024-03-13T19:00:00Z");
@@ -118,7 +118,7 @@ Deno.test("sendDaily includes thread_id and silent parameters per chat config", 
     );
   };
 
-  const { sendDaily } = await import("./telegram.ts");
+  const { sendDaily } = await import("../src/telegram.ts");
 
   const daily = makeMockDaily();
   const day = dayjs.utc("2024-03-13T19:00:00Z");
@@ -150,7 +150,7 @@ Deno.test("sendDaily message format contains all required sections", async () =>
     );
   };
 
-  const { sendDaily } = await import("./telegram.ts");
+  const { sendDaily } = await import("../src/telegram.ts");
 
   const daily = makeMockDaily();
   const day = dayjs.utc("2024-03-13T19:00:00Z");

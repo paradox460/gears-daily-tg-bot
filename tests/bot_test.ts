@@ -1,6 +1,6 @@
 import { assertEquals, assert } from "jsr:@std/assert@1";
-import dayjs from "./dayjs_setup.ts";
-import { dailyForDate } from "./gears.ts";
+import dayjs from "../src/dayjs_setup.ts";
+import { dailyForDate } from "../src/gears.ts";
 
 Deno.test("bot pipeline: config, day calc, daily query, and message sending", async () => {
   // This test exercises the same pipeline as bot.ts does at runtime:
@@ -8,7 +8,7 @@ Deno.test("bot pipeline: config, day calc, daily query, and message sending", as
   // but with a mocked Telegram API to avoid side effects.
 
   // Point config at our test fixture
-  Deno.env.set("CONFIG_PATH", "./_test_config.json");
+  Deno.env.set("CONFIG_PATH", "./tests/_test_config.json");
 
   // Replicate bot.ts's day calculation with offset=0
   const day = dayjs.utc().hour(19);
@@ -37,7 +37,7 @@ Deno.test("bot pipeline: config, day calc, daily query, and message sending", as
     );
   };
 
-  const { sendDaily } = await import("./telegram.ts");
+  const { sendDaily } = await import("../src/telegram.ts");
   await sendDaily(daily, day);
 
   // First message sent to the first chat with MarkdownV2

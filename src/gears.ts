@@ -1,7 +1,7 @@
 import dayjs from "./dayjs_setup.ts";
 import { Database } from "jsr:@db/sqlite@0.11";
 
-const db = new Database("database.db", {
+const db = new Database(new URL("../data/database.db", import.meta.url).pathname, {
   readonly: true,
   create: false,
 });
@@ -37,7 +37,7 @@ function getNext(
     totalDays: number;
   },
 ): dayjs.Dayjs {
-  let nextDay = db.prepare(`
+  let nextDay: number | undefined = db.prepare(`
     SELECT
       day
     FROM
@@ -47,7 +47,7 @@ function getNext(
       dailies.day > :day
       AND dailies.${key}_id = :id
     LIMIT 1
-    `).value({ day, id })?.[0];
+    `).value({ day, id })?.[0] as number | undefined;
   if (!nextDay) {
     // In the event that we don't find a next day, we're at or near the end of
     // the cycle, and should restart it.
@@ -62,7 +62,7 @@ function getNext(
       WHERE
         dailies.${key}_id = :id
       LIMIT 1
-    `).value({ id })?.[0];
+    `).value({ id })?.[0] as number | undefined;
   }
   const cycles = Math.floor(totalDays / 401);
   const cycleOffset = (nextDay! <= day) ? (cycles + 1) : cycles;

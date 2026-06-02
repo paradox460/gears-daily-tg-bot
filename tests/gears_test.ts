@@ -1,6 +1,6 @@
 import { assertEquals, assert } from "jsr:@std/assert@1";
-import dayjs from "./dayjs_setup.ts";
-import { dailyForDate } from "./gears.ts";
+import dayjs from "../src/dayjs_setup.ts";
+import { dailyForDate } from "../src/gears.ts";
 
 const epoch = dayjs.utc("2024-03-13T19:00:00Z");
 
