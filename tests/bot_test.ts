@@ -1,6 +1,8 @@
 import { assertEquals, assert } from "jsr:@std/assert@1";
-import dayjs from "../src/dayjs_setup.ts";
 import { dailyForDate } from "../src/gears.ts";
+// sendDaily must be imported dynamically — telegram.ts calls getConfig() at module
+// level, so CONFIG_PATH must be set before the first import. Static imports at the
+// top of this file would resolve before any test body runs.
 
 Deno.test("bot pipeline: config, day calc, daily query, and message sending", async () => {
   // This test exercises the same pipeline as bot.ts does at runtime:
@@ -11,7 +13,7 @@ Deno.test("bot pipeline: config, day calc, daily query, and message sending", as
   Deno.env.set("CONFIG_PATH", "./tests/_test_config.json");
 
   // Replicate bot.ts's day calculation with offset=0
-  const day = dayjs.utc().hour(19);
+  const day = Temporal.Now.zonedDateTimeISO("UTC").with({ hour: 19 });
 
   // Query the daily from the real database
   const daily = dailyForDate(day);
@@ -37,6 +39,8 @@ Deno.test("bot pipeline: config, day calc, daily query, and message sending", as
     );
   };
 
+  // Uses dynamic import because telegram.ts calls getConfig() at module
+  // level and CONFIG_PATH must be set before the module is loaded.
   const { sendDaily } = await import("../src/telegram.ts");
   await sendDaily(daily, day);
 
@@ -57,17 +61,21 @@ Deno.test("bot pipeline: config, day calc, daily query, and message sending", as
 });
 
 Deno.test("bot pipeline: offset shifts the target date correctly", () => {
-  // bot.ts does: dayjs.utc().hour(19).add(config.offset || 0, "day")
+  // bot.ts does: Temporal.Now.zonedDateTimeISO("UTC").with({ hour: 19 }).add(...)
   // Without offset = today at 19:00; with positive offset = future
-  const base = dayjs.utc().hour(19).startOf("day").hour(19);
-  const withOffset = base.add(3, "day");
-  assertEquals(withOffset.diff(base, "day"), 3, "offset of 3 should shift by 3 days");
-  assertEquals(withOffset.hour(), 19, "offset should not change the hour");
+  const base = Temporal.Now.zonedDateTimeISO("UTC").with({ hour: 19 });
+  const withOffset = base.add({ days: 3 });
+  assertEquals(
+    base.until(withOffset, { largestUnit: "days" }).days,
+    3,
+    "offset of 3 should shift by 3 days",
+  );
+  assertEquals(withOffset.hour, 19, "offset should not change the hour");
 });
 
 Deno.test("bot pipeline: dailyForDate with today's date succeeds", () => {
   // Same logic as bot.ts: get the daily for today @ 19:00
-  const day = dayjs.utc().hour(19);
+  const day = Temporal.Now.zonedDateTimeISO("UTC").with({ hour: 19 });
   const daily = dailyForDate(day);
 
   // All required fields present
@@ -85,7 +93,10 @@ Deno.test("bot pipeline: dailyForDate with today's date succeeds", () => {
     "next_map",
     "next_mutator",
   ] as const) {
-    const next = daily[key] as dayjs.Dayjs;
-    assert(next.isAfter(day), `${key} ${next.toISOString()} should be after ${day.toISOString()}`);
+    const next = daily[key] as Temporal.ZonedDateTime;
+    assert(
+      Temporal.ZonedDateTime.compare(next, day) > 0,
+      `${key} ${next.toString()} should be after ${day.toString()}`,
+    );
   }
 });

@@ -1,4 +1,3 @@
-import dayjs from "./dayjs_setup.ts";
 import type { Daily } from "./gears.ts";
 import getConfig, { Chat } from "./config.ts";
 
@@ -9,23 +8,26 @@ interface SuccessfulSend {
 
 const config = getConfig();
 
-function buildMessage(daily: Daily, day: dayjs.Dayjs) {
+function buildMessage(daily: Daily, day: Temporal.ZonedDateTime) {
+  const fullDate = day.toLocaleString("en", { weekday: "long", month: "long", day: "numeric" });
+  const monthDay = (zdt: Temporal.ZonedDateTime) =>
+    zdt.toLocaleString("en", { month: "long", day: "numeric" });
   return `
-*${day.format("dddd, MMMM D")}*
+*${fullDate}*
 
 *Horde Daily: ${daily.map}*
 ${daily.horde_reward}
-_Map/Reward next appearance: ${daily.next_map.format("MMMM D")} / ${
-    daily.next_horde_reward.format("MMMM D")
+_Map/Reward next appearance: ${monthDay(daily.next_map)} / ${
+    monthDay(daily.next_horde_reward)
   }_
 
 *Mutators*: ${daily.mutators}
-_*Mutators next appearance:* ${daily.next_mutator.format("MMMM D")}_
+_*Mutators next appearance:* ${monthDay(daily.next_mutator)}_
 
 *Escape Daily: ${daily.escape}*
 ${daily.escape_reward}
-_Escape/Reward next appearance: ${daily.next_escape.format("MMMM D")} / ${
-    daily.next_escape_reward.format("MMMM D")
+_Escape/Reward next appearance: ${monthDay(daily.next_escape)} / ${
+    monthDay(daily.next_escape_reward)
   }_
 `.trim().replace(/\./, "\\.");
 }
@@ -83,7 +85,7 @@ async function copyOrForwardMessage(
   console.log(response);
 }
 
-export async function sendDaily(daily: Daily, day: dayjs.Dayjs) {
+export async function sendDaily(daily: Daily, day: Temporal.ZonedDateTime) {
   const [firstChat, ...otherChats] = config.chats;
   const message = buildMessage(daily, day);
   console.log("Message:\n", message);

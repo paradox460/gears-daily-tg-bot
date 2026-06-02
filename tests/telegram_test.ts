@@ -1,23 +1,22 @@
 import { assertEquals, assert } from "jsr:@std/assert@1";
-import dayjs from "../src/dayjs_setup.ts";
 import type { Daily } from "../src/gears.ts";
 
 // Point config at test fixture before the module is loaded
 Deno.env.set("CONFIG_PATH", "./tests/_test_config.json");
 
 function makeMockDaily(): Daily {
-  const base = dayjs.utc("2024-03-13T19:00:00Z");
+  const base = Temporal.ZonedDateTime.from("2024-03-13T19:00:00[UTC]");
   return {
     map: "Clocktower 🏫",
     horde_reward: "1 Legendary Card / 4 Cards / 200 Coins",
     mutators: "Reduced Bleeding Damage ❤️‍🩹, Survivor 🪦",
     escape: "The Ambush 🐇",
     escape_reward: "10,000 CXP / 5,000 CXP / 200 Coins",
-    next_map: base.add(7, "day"),
-    next_horde_reward: base.add(3, "day"),
-    next_mutator: base.add(14, "day"),
-    next_escape: base.add(10, "day"),
-    next_escape_reward: base.add(5, "day"),
+    next_map: base.add({ days: 7 }),
+    next_horde_reward: base.add({ days: 3 }),
+    next_mutator: base.add({ days: 14 }),
+    next_escape: base.add({ days: 10 }),
+    next_escape_reward: base.add({ days: 5 }),
   };
 }
 
@@ -42,10 +41,12 @@ Deno.test("sendDaily sends message to the first chat", async () => {
     );
   };
 
+  // Uses dynamic import because telegram.ts calls getConfig() at module
+  // level and CONFIG_PATH must be set before the module is loaded.
   const { sendDaily } = await import("../src/telegram.ts");
 
   const daily = makeMockDaily();
-  const day = dayjs.utc("2024-03-13T19:00:00Z");
+  const day = Temporal.ZonedDateTime.from("2024-03-13T19:00:00[UTC]");
   await sendDaily(daily, day);
 
   // First call: sendMessage to the first chat
@@ -84,10 +85,12 @@ Deno.test("sendDaily sends message with correct parse_mode and formatting", asyn
     );
   };
 
+  // Uses dynamic import because telegram.ts calls getConfig() at module
+  // level and CONFIG_PATH must be set before the module is loaded.
   const { sendDaily } = await import("../src/telegram.ts");
 
   const daily = makeMockDaily();
-  const day = dayjs.utc("2024-03-13T19:00:00Z");
+  const day = Temporal.ZonedDateTime.from("2024-03-13T19:00:00[UTC]");
   await sendDaily(daily, day);
 
   const message = calls[0].body.text as string;
@@ -118,10 +121,12 @@ Deno.test("sendDaily includes thread_id and silent parameters per chat config", 
     );
   };
 
+  // Uses dynamic import because telegram.ts calls getConfig() at module
+  // level and CONFIG_PATH must be set before the module is loaded.
   const { sendDaily } = await import("../src/telegram.ts");
 
   const daily = makeMockDaily();
-  const day = dayjs.utc("2024-03-13T19:00:00Z");
+  const day = Temporal.ZonedDateTime.from("2024-03-13T19:00:00[UTC]");
   await sendDaily(daily, day);
 
   // First chat has no thread_id / silent
@@ -150,10 +155,12 @@ Deno.test("sendDaily message format contains all required sections", async () =>
     );
   };
 
+  // Uses dynamic import because telegram.ts calls getConfig() at module
+  // level and CONFIG_PATH must be set before the module is loaded.
   const { sendDaily } = await import("../src/telegram.ts");
 
   const daily = makeMockDaily();
-  const day = dayjs.utc("2024-03-13T19:00:00Z");
+  const day = Temporal.ZonedDateTime.from("2024-03-13T19:00:00[UTC]");
   await sendDaily(daily, day);
 
   const message = calls[0].body.text as string;

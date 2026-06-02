@@ -1,8 +1,7 @@
 import { assertEquals, assert } from "jsr:@std/assert@1";
-import dayjs from "../src/dayjs_setup.ts";
 import { dailyForDate } from "../src/gears.ts";
 
-const epoch = dayjs.utc("2024-03-13T19:00:00Z");
+const epoch = Temporal.ZonedDateTime.from("2024-03-13T19:00:00[UTC]");
 
 Deno.test("dailyForDate at epoch (day 0) returns known entry", () => {
   const daily = dailyForDate(epoch);
@@ -21,7 +20,7 @@ Deno.test("dailyForDate at epoch (day 0) returns known entry", () => {
 });
 
 Deno.test("dailyForDate at epoch + 1 day returns known entry", () => {
-  const date = epoch.add(1, "day");
+  const date = epoch.add({ days: 1 });
   const daily = dailyForDate(date);
 
   assertEquals(daily.map, "Icebound ☃");
@@ -35,7 +34,7 @@ Deno.test("dailyForDate at epoch + 1 day returns known entry", () => {
 });
 
 Deno.test("dailyForDate at epoch + 401 days returns same entry as day 0", () => {
-  const cycleLater = epoch.add(401, "day");
+  const cycleLater = epoch.add({ days: 401 });
   const daily = dailyForDate(cycleLater);
 
   assertEquals(daily.map, "Clocktower 🏫");
@@ -48,7 +47,7 @@ Deno.test("dailyForDate at epoch + 401 days returns same entry as day 0", () => 
 });
 
 Deno.test("dailyForDate at epoch + 402 days returns same entry as day 1", () => {
-  const cycleLater = epoch.add(402, "day");
+  const cycleLater = epoch.add({ days: 402 });
   const daily = dailyForDate(cycleLater);
 
   assertEquals(daily.map, "Icebound ☃");
@@ -65,14 +64,17 @@ Deno.test("dailyForDate next_* fields are after the input date", () => {
     "next_map",
     "next_mutator",
   ] as const) {
-    const next = daily[key] as dayjs.Dayjs;
-    assert(next.isAfter(epoch), `${key} ${next.toISOString()} is not after ${epoch.toISOString()}`);
+    const next = daily[key] as Temporal.ZonedDateTime;
+    assert(
+      Temporal.ZonedDateTime.compare(next, epoch) > 0,
+      `${key} ${next.toString()} is not after ${epoch.toString()}`,
+    );
   }
 });
 
 Deno.test("dailyForDate next_* fields at cycle boundary wrap correctly", () => {
   // day = 400 is the last entry in the 401-day cycle
-  const lastDay = epoch.add(400, "day");
+  const lastDay = epoch.add({ days: 400 });
   const daily = dailyForDate(lastDay);
 
   // All next_* fields must be after lastDay, and should be in the next cycle
@@ -83,11 +85,14 @@ Deno.test("dailyForDate next_* fields at cycle boundary wrap correctly", () => {
     "next_map",
     "next_mutator",
   ] as const) {
-    const next = daily[key] as dayjs.Dayjs;
-    assert(next.isAfter(lastDay), `${key} ${next.toISOString()} is not after ${lastDay.toISOString()}`);
+    const next = daily[key] as Temporal.ZonedDateTime;
+    assert(
+      Temporal.ZonedDateTime.compare(next, lastDay) > 0,
+      `${key} ${next.toString()} is not after ${lastDay.toString()}`,
+    );
     // At the last day of a cycle, the next appearance should be at least 1 day in the future
     assert(
-      next.diff(lastDay, "day") >= 1,
+      lastDay.until(next, { largestUnit: "days" }).days >= 1,
       `${key} is not at least 1 day in the future`,
     );
   }
@@ -98,7 +103,7 @@ Deno.test("dailyForDate throws for a day beyond the database", () => {
   // But we can test a date far in the future that still falls within range
   // With 401 entries, dayDiff = totalDays % 401 always maps to 0-400
   // So dailyForDate never throws for valid dates; confirm the function handles extremes
-  const farFuture = epoch.add(5000, "day");
+  const farFuture = epoch.add({ days: 5000 });
   const daily = dailyForDate(farFuture);
   // Should still return valid data (modulo arithmetic)
   assert(typeof daily.map === "string");
@@ -106,7 +111,7 @@ Deno.test("dailyForDate throws for a day beyond the database", () => {
 });
 
 Deno.test("dailyForDate at the epoch matches the same entry as 401-day cycle", () => {
-  const oneCycle = epoch.add(401, "day");
+  const oneCycle = epoch.add({ days: 401 });
   const a = dailyForDate(epoch);
   const b = dailyForDate(oneCycle);
 
@@ -125,8 +130,8 @@ Deno.test("dailyForDate at the epoch matches the same entry as 401-day cycle", (
     "next_map",
     "next_mutator",
   ] as const) {
-    const aNext = a[key] as dayjs.Dayjs;
-    const bNext = b[key] as dayjs.Dayjs;
-    assertEquals(bNext.diff(aNext, "day"), 401);
+    const aNext = a[key] as Temporal.ZonedDateTime;
+    const bNext = b[key] as Temporal.ZonedDateTime;
+    assertEquals(aNext.until(bNext, { largestUnit: "days" }).days, 401);
   }
 });

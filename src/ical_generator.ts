@@ -6,7 +6,6 @@ import ical, {
 } from "npm:ical-generator";
 
 import { Database } from "jsr:@db/sqlite@0.11";
-import dayjs from "./dayjs_setup.ts";
 
 const databasePath = import.meta.dirname + "/../data/database.db";
 const db = new Database(databasePath, {
@@ -14,7 +13,7 @@ const db = new Database(databasePath, {
   create: false,
 });
 
-export const epoch = dayjs.utc("2024-03-13T19:00:00Z");
+export const epoch = Temporal.ZonedDateTime.from("2024-03-13T19:00:00[UTC]");
 const allDailies = db.prepare(`
 SELECT
   dailies.*,
@@ -39,7 +38,7 @@ const calendar = ical({
 });
 
 function calcDate(offset: number) {
-  return epoch.add(offset, "days");
+  return epoch.add({ days: offset });
 }
 
 for (const daily of allDailies) {
@@ -72,8 +71,8 @@ ${daily.escape_reward}
   };
 
   calendar.createEvent({
-    start: date,
-    end: date.add(1, "day"),
+    start: new Date(date.epochMilliseconds),
+    end: new Date(date.add({ days: 1 }).epochMilliseconds),
     summary: `H: ${daily.map} | E: ${daily.escape}`,
     description,
     repeating,

@@ -1,21 +1,20 @@
-import dayjs from "./dayjs_setup.ts";
 import { DatabaseSync } from "node:sqlite";
 
 const databasePath = import.meta.dirname + "/../data/database.db";
 const db = new DatabaseSync(databasePath, { readOnly: true });
 
-const epoch = dayjs.utc("2024-03-13T19:00:00Z");
-export interface Daily extends Record<string, number | string | dayjs.Dayjs> {
+const epoch = Temporal.ZonedDateTime.from("2024-03-13T19:00:00[UTC]");
+export interface Daily extends Record<string, number | string | Temporal.ZonedDateTime> {
   escape_reward: string;
   escape: string;
   horde_reward: string;
   map: string;
   mutators: string;
-  next_escape_reward: dayjs.Dayjs;
-  next_escape: dayjs.Dayjs;
-  next_horde_reward: dayjs.Dayjs;
-  next_map: dayjs.Dayjs;
-  next_mutator: dayjs.Dayjs;
+  next_escape_reward: Temporal.ZonedDateTime;
+  next_escape: Temporal.ZonedDateTime;
+  next_horde_reward: Temporal.ZonedDateTime;
+  next_map: Temporal.ZonedDateTime;
+  next_mutator: Temporal.ZonedDateTime;
 }
 
 interface InternalDaily extends Daily {
@@ -34,7 +33,7 @@ function getNext(
     day: number;
     totalDays: number;
   },
-): dayjs.Dayjs {
+): Temporal.ZonedDateTime {
   let nextDay: number | undefined = db.prepare(`
     SELECT
       day
@@ -69,7 +68,7 @@ function getNext(
   }
   const cycles = Math.floor(totalDays / 401);
   const cycleOffset = (nextDay <= day) ? (cycles + 1) : cycles;
-  return epoch.add(nextDay + cycleOffset * 401, "days");
+  return epoch.add({ days: nextDay + cycleOffset * 401 });
 }
 function query(day: number, totalDays: number): Daily {
   const results = db.prepare(`
@@ -132,8 +131,8 @@ function query(day: number, totalDays: number): Daily {
   };
 }
 
-export function dailyForDate(date: dayjs.Dayjs) {
-  const totalDays = -(epoch.diff(date, "days"));
+export function dailyForDate(date: Temporal.ZonedDateTime) {
+  const totalDays = -(epoch.since(date, { largestUnit: "days" }).days);
   const dayDiff = (totalDays % 401) || 0;
 
   return query(dayDiff, totalDays);
