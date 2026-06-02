@@ -3,4 +3,4 @@
 #MISE sources=["**/*.ts"]
 #MISE outputs=["gears_bot"]
 #MISE tools=["deno"]
-deno compile --allow-all --unstable-ffi $argv --output gears_bot src/bot.ts
+deno compile --allow-all --unstable-ffi --include data/database.db --self-extracting $argv --output gears_bot src/bot.ts

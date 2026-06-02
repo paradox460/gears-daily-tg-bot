@@ -8,7 +8,8 @@ import ical, {
 import { Database } from "jsr:@db/sqlite@0.11";
 import dayjs from "./dayjs_setup.ts";
 
-const db = new Database(new URL("../data/database.db", import.meta.url).pathname, {
+const databasePath = import.meta.dirname + "/../data/database.db";
+const db = new Database(databasePath, {
   readonly: true,
   create: false,
 });
