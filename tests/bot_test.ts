@@ -1,4 +1,4 @@
-import { assertEquals, assert } from "jsr:@std/assert@1";
+import { assert, assertEquals } from "jsr:@std/assert@1";
 import { dailyForDate } from "../src/gears.ts";
 // sendDaily must be imported dynamically — telegram.ts calls getConfig() at module
 // level, so CONFIG_PATH must be set before the first import. Static imports at the
@@ -86,13 +86,15 @@ Deno.test("bot pipeline: dailyForDate with today's date succeeds", () => {
   assert(daily.escape_reward, "escape_reward is required");
 
   // next_* fields are in the future
-  for (const key of [
-    "next_escape_reward",
-    "next_escape",
-    "next_horde_reward",
-    "next_map",
-    "next_mutator",
-  ] as const) {
+  for (
+    const key of [
+      "next_escape_reward",
+      "next_escape",
+      "next_horde_reward",
+      "next_map",
+      "next_mutator",
+    ] as const
+  ) {
     const next = daily[key] as Temporal.ZonedDateTime;
     assert(
       Temporal.ZonedDateTime.compare(next, day) > 0,

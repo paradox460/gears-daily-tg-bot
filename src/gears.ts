@@ -4,7 +4,8 @@ const databasePath = import.meta.dirname + "/../data/database.db";
 const db = new DatabaseSync(databasePath, { readOnly: true });
 
 const epoch = Temporal.ZonedDateTime.from("2024-03-13T19:00:00[UTC]");
-export interface Daily extends Record<string, number | string | Temporal.ZonedDateTime> {
+export interface Daily
+  extends Record<string, number | string | Temporal.ZonedDateTime> {
   escape_reward: string;
   escape: string;
   horde_reward: string;
@@ -120,7 +121,13 @@ function query(day: number, totalDays: number): Daily {
       day,
       totalDays,
     }),
-    next_map: getNext({ table: "maps", key: "map", id: results.map_id, day, totalDays }),
+    next_map: getNext({
+      table: "maps",
+      key: "map",
+      id: results.map_id,
+      day,
+      totalDays,
+    }),
     next_mutator: getNext({
       table: "mutators",
       key: "mutator",

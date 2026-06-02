@@ -1,4 +1,4 @@
-import { assertEquals, assert } from "jsr:@std/assert@1";
+import { assert, assertEquals } from "jsr:@std/assert@1";
 import { dailyForDate } from "../src/gears.ts";
 
 const epoch = Temporal.ZonedDateTime.from("2024-03-13T19:00:00[UTC]");
@@ -57,13 +57,15 @@ Deno.test("dailyForDate at epoch + 402 days returns same entry as day 1", () => 
 Deno.test("dailyForDate next_* fields are after the input date", () => {
   const daily = dailyForDate(epoch);
 
-  for (const key of [
-    "next_escape_reward",
-    "next_escape",
-    "next_horde_reward",
-    "next_map",
-    "next_mutator",
-  ] as const) {
+  for (
+    const key of [
+      "next_escape_reward",
+      "next_escape",
+      "next_horde_reward",
+      "next_map",
+      "next_mutator",
+    ] as const
+  ) {
     const next = daily[key] as Temporal.ZonedDateTime;
     assert(
       Temporal.ZonedDateTime.compare(next, epoch) > 0,
@@ -78,13 +80,15 @@ Deno.test("dailyForDate next_* fields at cycle boundary wrap correctly", () => {
   const daily = dailyForDate(lastDay);
 
   // All next_* fields must be after lastDay, and should be in the next cycle
-  for (const key of [
-    "next_escape_reward",
-    "next_escape",
-    "next_horde_reward",
-    "next_map",
-    "next_mutator",
-  ] as const) {
+  for (
+    const key of [
+      "next_escape_reward",
+      "next_escape",
+      "next_horde_reward",
+      "next_map",
+      "next_mutator",
+    ] as const
+  ) {
     const next = daily[key] as Temporal.ZonedDateTime;
     assert(
       Temporal.ZonedDateTime.compare(next, lastDay) > 0,
@@ -123,13 +127,15 @@ Deno.test("dailyForDate at the epoch matches the same entry as 401-day cycle", (
   assertEquals(a.escape_reward, b.escape_reward);
 
   // next_* fields should be shifted by exactly 401 days (one cycle)
-  for (const key of [
-    "next_escape_reward",
-    "next_escape",
-    "next_horde_reward",
-    "next_map",
-    "next_mutator",
-  ] as const) {
+  for (
+    const key of [
+      "next_escape_reward",
+      "next_escape",
+      "next_horde_reward",
+      "next_map",
+      "next_mutator",
+    ] as const
+  ) {
     const aNext = a[key] as Temporal.ZonedDateTime;
     const bNext = b[key] as Temporal.ZonedDateTime;
     assertEquals(aNext.until(bNext, { largestUnit: "days" }).days, 401);

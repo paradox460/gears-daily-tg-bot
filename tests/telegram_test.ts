@@ -1,4 +1,4 @@
-import { assertEquals, assert } from "jsr:@std/assert@1";
+import { assert, assertEquals } from "jsr:@std/assert@1";
 import type { Daily } from "../src/gears.ts";
 
 // Point config at test fixture before the module is loaded
@@ -166,7 +166,10 @@ Deno.test("sendDaily message format contains all required sections", async () =>
   const message = calls[0].body.text as string;
 
   // Heading: day of week and date
-  assert(message.startsWith("*Wednesday, March 13*"), "Should start with formatted date");
+  assert(
+    message.startsWith("*Wednesday, March 13*"),
+    "Should start with formatted date",
+  );
 
   // Horde section
   assert(message.includes("*Horde Daily: Clocktower 🏫*"));
@@ -174,13 +177,17 @@ Deno.test("sendDaily message format contains all required sections", async () =>
   assert(message.includes("_Map/Reward next appearance: March 20 / March 16_"));
 
   // Mutators section
-  assert(message.includes("*Mutators*: Reduced Bleeding Damage ❤️‍🩹, Survivor 🪦"));
+  assert(
+    message.includes("*Mutators*: Reduced Bleeding Damage ❤️‍🩹, Survivor 🪦"),
+  );
   assert(message.includes("_*Mutators next appearance:* March 27_"));
 
   // Escape section
   assert(message.includes("*Escape Daily: The Ambush 🐇*"));
   assert(message.includes("10,000 CXP / 5,000 CXP / 200 Coins"));
-  assert(message.includes("_Escape/Reward next appearance: March 23 / March 18_"));
+  assert(
+    message.includes("_Escape/Reward next appearance: March 23 / March 18_"),
+  );
 
   globalThis.fetch = origFetch;
 });

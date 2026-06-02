@@ -9,7 +9,11 @@ interface SuccessfulSend {
 const config = getConfig();
 
 function buildMessage(daily: Daily, day: Temporal.ZonedDateTime) {
-  const fullDate = day.toLocaleString("en", { weekday: "long", month: "long", day: "numeric" });
+  const fullDate = day.toLocaleString("en", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
   const monthDay = (zdt: Temporal.ZonedDateTime) =>
     zdt.toLocaleString("en", { month: "long", day: "numeric" });
   return `

@@ -98,6 +98,7 @@ deno run src/bot.ts
 
 ## SQL Database
 
-The SQLite3 database, located under `data/database.db`, was created using some custom
-code on the `elixir` branch of this repo, and would not have been possible
-without Dr.Shwazz providing me with the excel sheet of the daily rotations.
+The SQLite3 database, located under `data/database.db`, was created using some
+custom code on the `elixir` branch of this repo, and would not have been
+possible without Dr.Shwazz providing me with the excel sheet of the daily
+rotations.
